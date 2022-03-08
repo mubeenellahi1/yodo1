@@ -23,6 +23,7 @@ Front end is written in a simple html file
 ```cd frontend```
 
 In index.html on line: 53 add google maps api key
-open index.html file with any live server
+
+Open index.html file with any live server
 
     
