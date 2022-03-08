@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Yodo1 GeoData</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+</head>
+
+<body>
+
+    <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">Yodo1 GeoData</a>
+    </header>
+
+    <div class="container-fluid">
+        <div class="row m-5">
+            <div class="col-10">
+                <input type="hidden" id="longlat">
+                <form id="geodata-form">
+                    <div class="form-group mb-4">
+                        <label for="name">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required placeholder="Enter Name">
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="name">Longitude</label>
+                        <input type="text" class="form-control" readonly required name="longitude" id="longitude">
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="name">Latitude</label>
+                        <input type="text" class="form-control" readonly required name="latitude" id="latitude">
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="name">GeoLocation</label>
+                        <textarea type="text" class="form-control" readonly required name="geolocation" id="geolocation"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+            <div class="col-10">
+                <span class="text-warning" id="error-message"></span>
+            </div>
+            <div class="col-5 mx-auto">
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+
+    <script>
+        var errorElement = document.getElementById("error-message");
+        var longituteElement = document.getElementById("longitude");
+        var latitudeElement = document.getElementById("latitude");
+        var longlatElement = document.getElementById("longlat");
+        var geolocationElement = document.getElementById("geolocation");
+
+
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById("map"), {
+            });
+
+            const geocoder = new google.maps.Geocoder();
+            longituteElement.addEventListener('change',()=>{getAddress(geocoder)});
+        }
+
+        function getAddress(geocoder) {
+            const latlng = {
+                lat: parseFloat(document.getElementById("latitude").value),
+                lng: parseFloat(document.getElementById("longitude").value),
+            };
+
+        geocoder
+            .geocode({ location: latlng })
+            .then((response) => {
+                console.log(response.results[0].formatted_address)
+                if (response.results[0]) {
+                    geolocation.value = response.results[0].formatted_address;
+                } else {
+                    window.alert("No results found");
+                }
+            })
+            .catch((e) => window.alert("Geocoder failed due to: " + e));
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                errorElement.innerHTML = "The Browser Does not Support Geolocation";
+            }
+        }
+
+        
+        function showPosition(position) {
+            latitudeElement.value = position.coords.latitude
+            longituteElement.value = position.coords.longitude
+            var event = new Event('change');
+            longituteElement.dispatchEvent(event);
+        }
+
+        
+        function showError(error) {
+            if (error.PERMISSION_DENIED) {
+                error.innerHTML = "The User have denied the request for Geolocation.";
+            }
+        }
+
+        getLocation();
+
+
+    </script>
+
+    <script>
+        const form = document.getElementById("geodata-form");
+
+        form.addEventListener('submit',function(e){
+            e.preventDefault()
+            const formData = new FormData(form)
+            var xmlhttp = new XMLHttpRequest();
+
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
+                    if (xmlhttp.status == 200) {
+                        window.alert("GeoData sent to Yodo Backend")
+                    }
+                    else if (xmlhttp.status == 400) {
+                        alert(xmlhttp.response);
+                        console.log(xmlhttp)
+                    }
+                    else {
+                        console.log(xmlhttp)
+                        alert(xmlhttp.response);
+                    }
+                }
+            };
+            xmlhttp.open("POST", "http://localhost:8000/api/geodata/", true);
+            xmlhttp.send(formData);
+
+        })
+    </script>
+</body>
+
+</html>
